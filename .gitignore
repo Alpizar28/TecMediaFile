@@ -1,0 +1,18 @@
+# Carpeta de compilación
+/build/
+
+# Archivos temporales de editor/IDE
+*.swp
+*.swo
+.vscode/
+*.user
+*.o
+
+# Directorio de bloques (datos binarios)
+/disk/blocks/
+
+# Archivos generados por CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
