@@ -1,17 +1,25 @@
+// controller/include/Controller.h
 #pragma once
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 class Controller {
 public:
     static Controller& instance();
 
-    // Operaciones REST
-    bool addDocument(const std::string& name, const std::string& data_b64);
+    // Lee el PDF samples/<name>.pdf, lo codifica en Base64 y lo guarda
+    bool addDocument(const std::string& name, const std::string& /*data_b64*/ = "");
+
+    // Lista todos los documentos añadidos
     std::vector<std::string> listDocuments();
+
+    // Devuelve el Base64 completo del PDF
     std::string downloadDocument(const std::string& name);
 
 private:
     Controller() = default;
-    // atributos privados: lista de nombres, config, etc.
+
+    std::vector<std::string> docs_;  
+    std::unordered_map<std::string, std::string> data_;  
 };

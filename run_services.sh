@@ -7,25 +7,36 @@ BUILD="$ROOT/build"
 echo "🛠 Limpiando build..."
 rm -rf "$BUILD"
 mkdir -p "$BUILD"
-cd "$BUILD"
 
 echo "📐 Ejecutando cmake..."
 cmake -S "$ROOT" -B "$BUILD"
 
 echo "🚧 Compilando..."
-cmake --build . --target controller -- -j$(nproc)
-cmake --build . --target disknode  -- -j$(nproc)
+cmake --build "$BUILD" --target controller -- -j$(nproc)
+cmake --build "$BUILD" --target disknode  -- -j$(nproc)
 
-echo "▶️ Arrancando Controller (18080) y DiskNode (18081)..."
-"$BUILD/controller/controller" &
-PID1=$!
-"$BUILD/disk/disknode" &
-PID2=$!
+echo "▶️ Arrancando servicios..."
 
-echo "Controller PID=$PID1  DiskNode PID=$PID2"
-echo "→ http://localhost:18080/list"
-echo "→ http://localhost:18081/read/0"
+# Arranca Controller desde la raíz (cwd=ROOT) para leer samples/
+(
+  cd "$ROOT"
+  echo "  Iniciando Controller..."
+  "$BUILD/controller/controller" &
+  PID_CTRL=$!
+)
+
+# Arranca DiskNode con cwd en BUILD
+(
+  cd "$BUILD"
+  echo "  Iniciando DiskNode..."
+  "./disk/disknode" &
+  PID_DISK=$!
+)
+
 echo
-echo "Para detenerlos: kill $PID1 $PID2"
+echo "Controller PID=$PID_CTRL (http://localhost:18080)"
+echo "DiskNode   PID=$PID_DISK (http://localhost:18081)"
+echo
+echo "Para detenerlos: kill $PID_CTRL $PID_DISK"
 
 wait
