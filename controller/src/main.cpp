@@ -5,14 +5,10 @@
 int main() {
     crow::SimpleApp app;
 
-    // Añadir documento: recibe nombre y datos en base64
-    CROW_ROUTE(app, "/add")
-      .methods(crow::HTTPMethod::Post)
-    ([](const crow::request& req){
-        auto j = nlohmann::json::parse(req.body);
-        std::string name = j["name"];
-        std::string data_b64 = j["data"];
-        bool ok = Controller::instance().addDocument(name, data_b64);
+    CROW_ROUTE(app, "/add/<string>")
+    .methods(crow::HTTPMethod::Post)
+    ([](const std::string& name){
+        bool ok = Controller::instance().addDocument(name, "");
         nlohmann::json resp{ {"ok", ok} };
         return crow::response{ resp.dump() };
     });
