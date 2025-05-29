@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cliente REST – TECMFS</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Cliente REST para TECMFS</h1>
+
+    <section>
+      <h2>1. Subir archivo</h2>
+      <input type="file" id="fileInput" />
+      <button onclick="upload()">Upload</button>
+      <div id="uploadResult"></div>
+    </section>
+
+    <section>
+      <h2>2. Listar archivos</h2>
+      <button id="btnListar">Listar</button>
+      <!-- Contenedor para el JSON que devuelve GET /list -->
+      <div
+        id="listado"
+        style="
+          white-space: pre-wrap;
+          background: #ecf0f1;
+          padding: 0.5rem;
+          margin-top: 0.5rem;
+          border-radius: 4px;
+          font-family: monospace;
+        "
+      ></div>
+    </section>
+
+    <section>
+      <h2>3. Descargar archivo</h2>
+      <label for="downName">Nombre de archivo:</label>
+      <input type="text" id="downName" placeholder="ej: doc.pdf" />
+      <button onclick="download()">Download</button>
+    </section>
+
+    <section>
+      <h2>4. Eliminar archivo</h2>
+      <label for="delName">Nombre de archivo:</label>
+      <input type="text" id="delName" placeholder="ej: doc.pdf" />
+      <button onclick="remove()">Delete</button>
+      <div id="delResult"></div>
+    </section>
+
+    <script src="app.js"></script>
+  </body>
+</html>
