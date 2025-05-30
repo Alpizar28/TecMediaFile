@@ -17,3 +17,9 @@ CMakeCache.txt
 cmake_install.cmake
 Makefile
 /storage/
+
+# ignorar carpetas de nodos (datos temporales)
+node0/
+node1/
+node2/
+node3/

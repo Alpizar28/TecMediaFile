@@ -1,50 +1,57 @@
 #include "Base64.h"
-#include <string>
-#include <vector>
+#include <algorithm>
 #include <cstdint>
-
-static const std::string chars =
+const std::string Base64::chars = 
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789+/";
 
-std::string base64_encode(const std::string& in) {
-    std::string out;
-    int val = 0;
-    int valb = -6;
-    for (uint8_t c : reinterpret_cast<const std::string&>(in)) {
+std::string Base64::encode(const std::vector<uint8_t>& data) {
+    std::string result;
+    int val = 0, valb = -6;
+    
+    for (uint8_t c : data) {
         val = (val << 8) + c;
         valb += 8;
         while (valb >= 0) {
-            out.push_back(chars[(val >> valb) & 0x3F]);
+            result.push_back(chars[(val >> valb) & 0x3F]);
             valb -= 6;
         }
     }
+    
     if (valb > -6) {
-        out.push_back(chars[((val << 8) >> (valb + 8)) & 0x3F]);
+        result.push_back(chars[((val << 8) >> (valb + 8)) & 0x3F]);
     }
-    while (out.size() % 4) {
-        out.push_back('=');
+    
+    while (result.size() % 4) {
+        result.push_back('=');
     }
-    return out;
+    
+    return result;
 }
 
-std::string base64_decode(const std::string& in) {
-    std::vector<int> T(256, -1);
+std::vector<uint8_t> Base64::decode(const std::string& encoded) {
+    std::vector<uint8_t> result;
+    std::vector<int> T(128, -1);
+    
     for (int i = 0; i < 64; i++) {
-        T[static_cast<uint8_t>(chars[i])] = i;
+        T[chars[i]] = i;
     }
-    std::string out;
-    int val = 0;
-    int valb = -8;
-    for (uint8_t c : reinterpret_cast<const std::string&>(in)) {
+    
+    int val = 0, valb = -8;
+    for (char c : encoded) {
         if (T[c] == -1) break;
         val = (val << 6) + T[c];
         valb += 6;
         if (valb >= 0) {
-            out.push_back(char((val >> valb) & 0xFF));
+            result.push_back(char((val >> valb) & 0xFF));
             valb -= 8;
         }
     }
-    return out;
+    
+    return result;
+}
+
+bool Base64::isBase64(unsigned char c) {
+    return (isalnum(c) || (c == '+') || (c == '/'));
 }
