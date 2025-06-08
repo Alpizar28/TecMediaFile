@@ -6,6 +6,8 @@ add_library(shared STATIC
     src/JsonProtocol.cpp
     src/Base64.cpp
     src/Raid5Helpers.cpp
+    src/tinyxml2.cpp
+
 )
 
 target_include_directories(shared PUBLIC

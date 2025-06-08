@@ -1,0 +1,7 @@
+<disk>
+    <ip>127.0.0.1</ip>
+    <port>18081</port>
+    <path>blocks/</path>
+    <size>1048576</size>
+    <block_size>4096</block_size>
+</disk>

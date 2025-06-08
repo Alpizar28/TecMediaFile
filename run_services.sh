@@ -26,12 +26,14 @@ echo "▶️ Arrancando servicios..."
 )
 
 # Arranca DiskNode con cwd en BUILD
+# Arranca DiskNode con cwd en ROOT para que lea bien disk/config
 (
-  cd "$BUILD"
+  cd "$ROOT"
   echo "  Iniciando DiskNode..."
-  "./disk/disknode" &
+  "$BUILD/disk/disknode" &
   PID_DISK=$!
 )
+
 
 echo
 echo "Controller PID=$PID_CTRL (http://localhost:18080)"
