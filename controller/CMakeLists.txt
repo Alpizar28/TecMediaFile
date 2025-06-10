@@ -14,12 +14,16 @@ find_package(nlohmann_json CONFIG REQUIRED)
 add_executable(controller
     src/main.cpp
     src/FileController.cpp
+    src/ControllerConfig.cpp    # 👈 añadí esto
 
     # Añadimos también las fuentes de shared para que se compile Raid5, Base64 y JsonProtocol
     ${CMAKE_SOURCE_DIR}/shared/src/Raid5.cpp
     ${CMAKE_SOURCE_DIR}/shared/src/Base64.cpp
     ${CMAKE_SOURCE_DIR}/shared/src/JsonProtocol.cpp
     ${CMAKE_SOURCE_DIR}/shared/src/Raid5Helpers.cpp
+    ${CMAKE_SOURCE_DIR}/shared/src/tinyxml2.cpp
+    
+
 
 )
 
@@ -38,3 +42,7 @@ target_link_libraries(controller PRIVATE
     nlohmann_json::nlohmann_json
     shared
 )
+
+add_executable(test_xml src/test_xml.cpp)
+target_link_libraries(test_xml PRIVATE tinyxml2)
+

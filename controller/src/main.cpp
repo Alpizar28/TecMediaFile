@@ -1,10 +1,11 @@
 #include <crow.h>
 #include <filesystem>
 #include <fstream>
-#include <streambuf>
 #include <iostream>
+#include <streambuf>
 #include "FileController.h"
 #include "Raid5.h"
+#include "ControllerConfig.h"  // Incluye la definición de structs y la función
 
 static std::string loadFileContent(const std::string& path) {
     std::ifstream in(path, std::ios::binary);
@@ -15,13 +16,13 @@ static std::string loadFileContent(const std::string& path) {
 int main() {
     std::cout << "Iniciando TEC Media File System Controller...\n";
 
-    // Inicializar RAID 5
-    std::vector<std::string> nodeUrls = {
-        "http://localhost:18081",
-        "http://localhost:18082",
-        "http://localhost:18083",
-        "http://localhost:18084"
-    };
+    ControllerConfig config = loadControllerConfig("controller/config/controller_config.xml");
+
+    // Construir URLs de los discos
+    std::vector<std::string> nodeUrls;
+    for (const auto& d : config.disks)
+        nodeUrls.push_back("http://" + d.ip + ":" + std::to_string(d.port));
+
     Raid5& raid = Raid5::getInstance();
     if (!raid.initialize(nodeUrls)) {
         std::cerr << "Error inicializando RAID 5\n";
@@ -30,11 +31,8 @@ int main() {
 
     crow::SimpleApp app;
 
-    //
-    // Servir index.html en GET /
-    //
+    // Servir frontend
     CROW_ROUTE(app, "/")
-    .methods(crow::HTTPMethod::GET)
     ([](const crow::request&, crow::response& res) {
         auto html = loadFileContent("frontend/index.html");
         if (html.empty()) {
@@ -48,11 +46,7 @@ int main() {
         res.end();
     });
 
-    //
-    // Servir CSS y JS en GET /static/{filename}
-    //
     CROW_ROUTE(app, "/static/<string>")
-    .methods(crow::HTTPMethod::GET)
     ([](const crow::request&, crow::response& res, std::string file) {
         std::string path = "frontend/" + file;
         auto ext = std::filesystem::path(path).extension().string();
@@ -61,27 +55,22 @@ int main() {
             res.code = 404;
             res.write("No encontrado: " + file);
         } else {
-            if (ext == ".css") {
-                res.set_header("Content-Type", "text/css");
-            } else if (ext == ".js") {
-                res.set_header("Content-Type", "application/javascript");
-            } else {
-                res.set_header("Content-Type", "application/octet-stream");
-            }
+            if (ext == ".css") res.set_header("Content-Type", "text/css");
+            else if (ext == ".js") res.set_header("Content-Type", "application/javascript");
+            else res.set_header("Content-Type", "application/octet-stream");
             res.code = 200;
             res.write(content);
         }
         res.end();
     });
 
-    // Registrar rutas REST
     FileController::registerRoutes(app);
 
-    std::cout << "Servidor iniciado en puerto 18080\n";
+    std::cout << "Servidor iniciado en puerto: " << config.controllerPort << "\n";
     std::cout << "Frontend en GET /\n";
-    std::cout << "Recursos estáticos en GET /static/{filename}\n";
-    std::cout << "Rutas API: /upload, /list, /download, /delete, /status\n";
+    std::cout << "Recursos estáticos en /static/{file}\n";
+    std::cout << "API: /upload, /list, /download, /delete, /status\n";
 
-    app.port(18080).multithreaded().run();
+    app.port(config.controllerPort).multithreaded().run();
     return 0;
 }

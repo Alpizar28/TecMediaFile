@@ -1,0 +1,21 @@
+<controller>
+    <port>18080</port>
+    <disks>
+        <disk>
+            <ip>127.0.0.1</ip>
+            <port>18081</port>
+        </disk>
+        <disk>
+            <ip>127.0.0.1</ip>
+            <port>18082</port>
+        </disk>
+        <disk>
+            <ip>127.0.0.1</ip>
+            <port>18083</port>
+        </disk>
+        <disk>
+            <ip>127.0.0.1</ip>
+            <port>18084</port>
+        </disk>
+    </disks>
+</controller>
