@@ -61,7 +61,23 @@ button:hover {
   background: #2980b9;
 }
 
-#listado,
+.btn-download {
+  background: #27ae60;
+  margin-right: 0.5rem;
+}
+
+.btn-download:hover {
+  background: #219a52;
+}
+
+.btn-delete {
+  background: #e74c3c;
+}
+
+.btn-delete:hover {
+  background: #c0392b;
+}
+
 #uploadResult,
 #delResult {
   margin-top: 0.75rem;
@@ -70,4 +86,46 @@ button:hover {
   border-radius: 4px;
   font-family: monospace;
   white-space: pre-wrap;
+}
+
+#files-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+#files-table th,
+#files-table td {
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+#files-table th {
+  background-color: #34495e;
+  color: white;
+}
+
+#files-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.node-status {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.node-active {
+  background-color: #27ae60;
+}
+
+.node-inactive {
+  background-color: #e74c3c;
+}
+
+.actions-cell {
+  white-space: nowrap;
 }

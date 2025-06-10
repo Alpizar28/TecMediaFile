@@ -16,25 +16,28 @@
     </section>
 
     <section>
-      <h2>2. Listar archivos</h2>
-      <button id="btnListar">Listar</button>
-      <ul id="fileList"></ul>
-      <div id="listError"></div>
-    </section>
-
-    <section>
-      <h2>3. Descargar archivo</h2>
-      <label for="downName">Nombre de archivo:</label>
-      <input type="text" id="downName" placeholder="ej: doc.pdf" />
-      <button id="btnDownload">Download</button>
-    </section>
-
-    <section>
-      <h2>4. Eliminar archivo</h2>
+      <h2>2. Eliminar archivo</h2>
       <label for="delName">Nombre de archivo:</label>
       <input type="text" id="delName" placeholder="ej: doc.pdf" />
       <button id="btnDelete">Delete</button>
       <div id="delResult"></div>
+    </section>
+
+    <section>
+      <h2>3. Gestión de archivos y estado de nodos</h2>
+      <table id="files-table">
+        <thead>
+          <tr>
+            <th>Archivo</th>
+            <th>Tamaño</th>
+            <th>Acciones</th>
+            <th>Estado de Nodos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Aquí se añadirá una <tr> por cada archivo -->
+        </tbody>
+      </table>
     </section>
 
     <script src="/static/app.js"></script>
