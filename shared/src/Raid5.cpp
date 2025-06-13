@@ -24,6 +24,9 @@ bool Raid5::initialize(const std::vector<std::string>& nodeUrls) {
         return false;
     }
     nodeUrls_ = nodeUrls;
+    
+    // Inicializar estado de nodos (todos activos por defecto)
+    disabledNodes_.clear();
 
     // Crear directorios para simular nodos
     for (int i = 0; i < RAID_NODES; ++i) {
@@ -41,12 +44,77 @@ bool Raid5::initialize(const std::vector<std::string>& nodeUrls) {
     return true;
 }
 
+// NUEVA FUNCIÓN: Deshabilitar un nodo
+bool Raid5::disableNode(int nodeId) {
+    if (nodeId < 0 || nodeId >= RAID_NODES) {
+        std::cerr << "Error: ID de nodo inválido " << nodeId << "\n";
+        return false;
+    }
+    
+    // Verificar si el nodo ya está deshabilitado
+    if (disabledNodes_.find(nodeId) != disabledNodes_.end()) {
+        std::cout << "Nodo " << nodeId << " ya está deshabilitado\n";
+        return true;
+    }
+    
+    // Verificar si deshabilitar este nodo mantendría el sistema funcional
+    int activeNodes = RAID_NODES - disabledNodes_.size();
+    if (activeNodes <= 3) { // RAID 5 necesita al menos 3 nodos
+        std::cerr << "Error: No se puede deshabilitar el nodo " << nodeId 
+                  << ". El sistema necesita al menos 3 nodos activos\n";
+        return false;
+    }
+    
+    // Agregar el nodo a la lista de deshabilitados
+    disabledNodes_.insert(nodeId);
+    
+    std::cout << "Nodo " << nodeId << " deshabilitado exitosamente\n";
+    std::cout << "Nodos activos restantes: " << (RAID_NODES - disabledNodes_.size()) << "\n";
+    
+    return true;
+}
+
+// NUEVA FUNCIÓN: Habilitar un nodo previamente deshabilitado
+bool Raid5::enableNode(int nodeId) {
+    if (nodeId < 0 || nodeId >= RAID_NODES) {
+        std::cerr << "Error: ID de nodo inválido " << nodeId << "\n";
+        return false;
+    }
+    
+    auto it = disabledNodes_.find(nodeId);
+    if (it == disabledNodes_.end()) {
+        std::cout << "Nodo " << nodeId << " ya está habilitado\n";
+        return true;
+    }
+    
+    // Eliminar el nodo de la lista de deshabilitados
+    disabledNodes_.erase(it);
+    
+    // Crear directorio del nodo si no existe
+    std::filesystem::create_directories("node" + std::to_string(nodeId));
+    
+    std::cout << "Nodo " << nodeId << " habilitado exitosamente\n";
+    return true;
+}
+
+// NUEVA FUNCIÓN: Obtener lista de nodos deshabilitados
+std::vector<int> Raid5::getDisabledNodes() const {
+    return std::vector<int>(disabledNodes_.begin(), disabledNodes_.end());
+}
+
 // Almacenar archivo en bloques y paridad
 bool Raid5::storeFile(const std::string& filename, const std::vector<uint8_t>& data) {
     if (data.empty()) {
         std::cerr << "Error: datos vacíos para archivo " << filename << "\n";
         return false;
     }
+    
+    // Verificar que hay suficientes nodos activos
+    if (!isSystemHealthy()) {
+        std::cerr << "Error: Sistema no saludable, no se puede almacenar archivo\n";
+        return false;
+    }
+    
     if (fileExists(filename)) {
         deleteFile(filename);
     }
@@ -65,6 +133,12 @@ bool Raid5::storeFile(const std::string& filename, const std::vector<uint8_t>& d
         int dataNode   = (offset >= parityNode ? offset + 1 : offset);
         int blockId    = nextBlockId_++;
 
+        // Verificar si el nodo de datos está activo
+        if (!isNodeActive(dataNode)) {
+            std::cerr << "Error: Nodo de datos " << dataNode << " no está activo\n";
+            return false;
+        }
+
         if (!writeBlockToNode(dataNode, blockId, blocks[i])) {
             std::cerr << "Error escribiendo bloque " << blockId << "\n";
             return false;
@@ -73,6 +147,12 @@ bool Raid5::storeFile(const std::string& filename, const std::vector<uint8_t>& d
 
         // Calcular y escribir bloque de paridad al final de cada grupo
         if ((i + 1) % (RAID_NODES - 1) == 0 || i + 1 == blocks.size()) {
+            // Verificar si el nodo de paridad está activo
+            if (!isNodeActive(parityNode)) {
+                std::cerr << "Error: Nodo de paridad " << parityNode << " no está activo\n";
+                return false;
+            }
+            
             std::vector<std::vector<uint8_t>> grp;
             int start = group * (RAID_NODES - 1);
             for (int j = start; j <= static_cast<int>(i); ++j)
@@ -103,6 +183,8 @@ std::vector<uint8_t> Raid5::retrieveFile(const std::string& filename) {
     for (int bid : meta.blockIds) {
         bool ok = false;
         for (int node = 0; node < RAID_NODES && !ok; ++node) {
+            if (!isNodeActive(node)) continue; // Saltar nodos deshabilitados
+            
             auto blk = readBlockFromNode(node, bid);
             if (!blk.empty()) {
                 out.insert(out.end(), blk.begin(), blk.end());
@@ -177,6 +259,9 @@ bool Raid5::recoverFromFailure(int failedNodeId) {
     
     // Implementación básica de recuperación
     std::cout << "Recuperando nodo " << failedNodeId << "\n";
+    
+    // Habilitar el nodo si estaba deshabilitado
+    enableNode(failedNodeId);
     
     // Crear directorio del nodo si no existe
     std::filesystem::create_directories("node" + std::to_string(failedNodeId));
@@ -278,6 +363,11 @@ std::vector<uint8_t> Raid5::calculateParity(const std::vector<std::vector<uint8_
 }
 
 bool Raid5::writeBlockToNode(int nodeId, int blockId, const std::vector<uint8_t>& d) {
+    if (!isNodeActive(nodeId)) {
+        std::cerr << "Error: Intento de escribir en nodo deshabilitado " << nodeId << "\n";
+        return false;
+    }
+    
     std::string path = "node" + std::to_string(nodeId) +
                        "/block_" + std::to_string(blockId) + ".bin";
     std::ofstream out(path, std::ios::binary);
@@ -287,6 +377,10 @@ bool Raid5::writeBlockToNode(int nodeId, int blockId, const std::vector<uint8_t>
 }
 
 std::vector<uint8_t> Raid5::readBlockFromNode(int nodeId, int blockId) const {
+    if (!isNodeActive(nodeId)) {
+        return {}; // No leer de nodos deshabilitados
+    }
+    
     std::string path = "node" + std::to_string(nodeId) +
                        "/block_" + std::to_string(blockId) + ".bin";
     std::ifstream in(path, std::ios::binary);
@@ -294,8 +388,9 @@ std::vector<uint8_t> Raid5::readBlockFromNode(int nodeId, int blockId) const {
     return {std::istreambuf_iterator<char>(in), {}};
 }
 
-bool Raid5::isNodeActive(int) const {
-    return true;
+bool Raid5::isNodeActive(int nodeId) const {
+    // Un nodo está activo si no está en la lista de deshabilitados
+    return disabledNodes_.find(nodeId) == disabledNodes_.end();
 }
 
 int Raid5::getParityNode(int blockGroup) {
@@ -390,5 +485,4 @@ std::vector<int> Raid5::findOrphanedBlocks() const {
     }
 
     return orphanedBlocks;
-
 }

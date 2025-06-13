@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <ctime>
 #include <cstdint>
+#include <unordered_set>
 
 /// Estado global de un nodo de almacenamiento
 struct NodeStatus {
@@ -66,6 +67,9 @@ public:
      * @return unordered_map<string filename, vector<FileNodeStatus>>
      */
     std::unordered_map<std::string, std::vector<FileNodeStatus>> getStatusPerFile() const;
+    bool disableNode(int nodeId);
+    bool enableNode(int nodeId);
+    std::vector<int> getDisabledNodes() const;
 
 private:
     Raid5() = default;
@@ -92,4 +96,7 @@ private:
     // Métodos auxiliares para limpieza (NUEVOS)
     bool removeBlockFromNode(int nodeId, int blockId);
     std::vector<int> findOrphanedBlocks() const;
+
+    std::unordered_set<int> disabledNodes_;
+
 };
